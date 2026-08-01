@@ -4,7 +4,19 @@ let
   # 1. Overlay nix-ros-overlay onto nixpkgs
   pkgsWithRos = import inputs.nixpkgs {
     system = "aarch64-darwin"; # Explicitly set for M-series Apple Silicon
-    overlays = [ inputs.nix-ros-overlay.overlays.default ];
+    overlays = [
+      inputs.nix-ros-overlay.overlays.default
+      (final: prev: {
+        pythonPackagesExtensions = prev.pythonPackagesExtensions ++ [
+          (python-final: python-prev: {
+            # colcon-ros mixes two setuptools versions through its plugins.
+            colcon-ros = python-prev.colcon-ros.overridePythonAttrs (_: {
+              catchConflicts = false;
+            });
+          })
+        ];
+      })
+    ];
     config.allowUnfree = true;
   };
 
@@ -35,7 +47,7 @@ in
   ];
 
   enterShell = ''
-    echo "⚡ ROS 2 (Jazzy) + Nix Devenv activated on M3 Apple Silicon"
+    echo "⚡ ROS 2 (Humble) + Nix Devenv activated on M3 Apple Silicon"
     export ROS_DOMAIN_ID=42
 
     # Auto-source colcon workspace if built locally
