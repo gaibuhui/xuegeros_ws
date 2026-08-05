@@ -97,6 +97,7 @@ in
     rosDistro.tf2-geometry-msgs
     rosDistro.demo-nodes-cpp
     rosDistro.demo-nodes-py
+    rosDistro.teleop-twist-keyboard
     # Required by xuegecar_bringup.launch.py to publish the robot link tree.
     rosDistro.joint-state-publisher
     rosDistro.robot-state-publisher
@@ -142,7 +143,7 @@ in
     # Python ROS packages are not always exposed through the overlay's ament
     # dependency closure. Keep their resources available after the local
     # workspace setup script has established the rest of the overlay paths.
-    export AMENT_PREFIX_PATH="${rosDistro.launch}:${rosDistro.launch-xml}:${rosDistro.rqt-gui}:${rosDistro.joint-state-publisher}:${rosDistro.tf2-tools}:$AMENT_PREFIX_PATH"
+    export AMENT_PREFIX_PATH="${rosDistro.launch}:${rosDistro.launch-xml}:${rosDistro.rqt-gui}:${rosDistro.joint-state-publisher}:${rosDistro.teleop-twist-keyboard}:${rosDistro.tf2-tools}:$AMENT_PREFIX_PATH"
   '';
 
   scripts.micro-ros-agent = {
