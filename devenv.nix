@@ -23,6 +23,9 @@ let
           '' else old.postInstall;
           meta = old.meta // { broken = false; };
         });
+        # nix-ros-overlay still defines this legacy variant by passing a
+        # removed `qt6` argument to PCL.  PCL now directly uses Qt5.
+        pclWithQt5 = final.pcl;
         rosPackages = prev.rosPackages // {
           humble = prev.rosPackages.humble.overrideScope (rosFinal: rosPrev: {
             # nix-ros-overlay omits the Apple Silicon SDK artifact even though
@@ -117,6 +120,10 @@ in
     rosDistro.demo-nodes-py
     rosDistro.teleop-twist-keyboard
     rosDistro.nav2-map-server
+    # xuegecar_cartographer launches cartographer_node and the occupancy-grid
+    # node from this package; the core library is a direct build dependency.
+    rosDistro.cartographer
+    rosDistro.cartographer-ros
     # Required by xuegecar_bringup.launch.py to publish the robot link tree.
     rosDistro.joint-state-publisher
     rosDistro.robot-state-publisher
