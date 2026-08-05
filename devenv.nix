@@ -52,6 +52,23 @@ else()
                 substituteInPlace src/ros2_foxglove_bridge.cpp --replace-warn '%lu' '%llu'
               '';
             });
+            # Nav2 1.1.20 still uses rclcpp's deprecated mutable-message
+            # subscription callback.  Newer Humble rclcpp headers turn that
+            # diagnostic into a build failure under Nav2's -Werror policy.
+            nav2-util = rosPrev.nav2-util.overrideAttrs (old: {
+              postPatch = (old.postPatch or "") + ''
+                substituteInPlace include/nav2_util/odometry_utils.hpp src/odometry_utils.cpp \
+                  --replace-warn 'nav_msgs::msg::Odometry::SharedPtr msg' \
+                  'nav_msgs::msg::Odometry::ConstSharedPtr msg'
+              '';
+            });
+            nav2-map-server = rosPrev.nav2-map-server.overrideAttrs (old: {
+              postPatch = (old.postPatch or "") + ''
+                substituteInPlace src/map_saver/map_saver.cpp \
+                  --replace-fail 'nav_msgs::msg::OccupancyGrid::SharedPtr' \
+                  'nav_msgs::msg::OccupancyGrid::ConstSharedPtr'
+              '';
+            });
           });
         };
       })
@@ -99,6 +116,7 @@ in
     rosDistro.demo-nodes-cpp
     rosDistro.demo-nodes-py
     rosDistro.teleop-twist-keyboard
+    rosDistro.nav2-map-server
     # Required by xuegecar_bringup.launch.py to publish the robot link tree.
     rosDistro.joint-state-publisher
     rosDistro.robot-state-publisher
