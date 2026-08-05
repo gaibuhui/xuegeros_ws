@@ -90,9 +90,7 @@ in
     fi
 
     # Auto-source colcon workspace if built locally
-    if [ -f install/setup.zsh ]; then
-      source install/setup.zsh
-    elif [ -f install/setup.bash ]; then
+    if [ -f install/setup.bash ]; then
       source install/setup.bash
     fi
   '';
@@ -100,8 +98,8 @@ in
   scripts.micro-ros-agent = {
     description = "Start the native micro-ROS Agent with UDP4 on port 8888";
     exec = ''
-      source "$DEVENV_ROOT/src/install/setup.bash"
-      exec "$DEVENV_ROOT/src/install/micro_ros_agent/lib/micro_ros_agent/micro_ros_agent" \
+      source "$DEVENV_ROOT/install/setup.bash"
+      exec "$DEVENV_ROOT/install/micro_ros_agent/lib/micro_ros_agent/micro_ros_agent" \
         udp4 --port "''${MICRO_ROS_AGENT_PORT:-8888}" "$@"
     '';
   };
