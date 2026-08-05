@@ -65,6 +65,12 @@ in
     rosDistro.tf2-geometry-msgs
     rosDistro.demo-nodes-cpp
     rosDistro.demo-nodes-py
+    # Camera nodes publish `sensor_msgs/CompressedImage`; this package
+    # registers image_transport/compressed_{pub,sub} with pluginlib.
+    rosDistro.compressed-image-transport
+    # rqt_image_view imports rqt_gui at runtime and resolves it through the
+    # ament package index, so it must be a direct shell dependency.
+    rosDistro.rqt-gui
     rosDistro.rqt-image-view
     qt5.full
 
@@ -93,6 +99,11 @@ in
     if [ -f install/setup.bash ]; then
       source install/setup.bash
     fi
+
+    # nix-ros-overlay does not expose rqt_gui's ament resource through the
+    # rqt_image_view dependency closure.  Keep it available after the local
+    # workspace setup script has established the rest of the overlay paths.
+    export AMENT_PREFIX_PATH="${rosDistro.rqt-gui}:$AMENT_PREFIX_PATH"
   '';
 
   scripts.micro-ros-agent = {
