@@ -91,6 +91,7 @@ in
     rosDistro.visualization-msgs
     rosDistro.std-srvs
     rosDistro.rmw
+    rosDistro.rmw-fastrtps-cpp
     rosDistro.tf2
     rosDistro.tf2-ros
     rosDistro.tf2-tools
@@ -143,7 +144,7 @@ in
     # Python ROS packages are not always exposed through the overlay's ament
     # dependency closure. Keep their resources available after the local
     # workspace setup script has established the rest of the overlay paths.
-    export AMENT_PREFIX_PATH="${rosDistro.launch}:${rosDistro.launch-xml}:${rosDistro.rqt-gui}:${rosDistro.joint-state-publisher}:${rosDistro.teleop-twist-keyboard}:${rosDistro.tf2-tools}:$AMENT_PREFIX_PATH"
+    export AMENT_PREFIX_PATH="${rosDistro.launch}:${rosDistro.launch-xml}:${rosDistro.rqt-gui}:${rosDistro.joint-state-publisher}:${rosDistro.teleop-twist-keyboard}:${rosDistro.tf2-tools}:${rosDistro.rmw-fastrtps-cpp}:$AMENT_PREFIX_PATH"
   '';
 
   scripts.micro-ros-agent = {
@@ -160,7 +161,8 @@ in
   scripts.ros2 = {
     description = "Run ROS 2 with Darwin runtime libraries available";
     exec = ''
-      export DYLD_LIBRARY_PATH="${rosDistro."libyaml-vendor"}/lib:${rosDistro.robot-state-publisher}/lib:''${DYLD_LIBRARY_PATH:-}"
+      export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+      export DYLD_LIBRARY_PATH="${rosDistro."libyaml-vendor"}/lib:${rosDistro.robot-state-publisher}/lib:${rosDistro.rmw-fastrtps-cpp}/lib:${rosDistro.rmw-dds-common}/lib:${rosDistro.rcl-interfaces}/lib:${rosDistro.sensor-msgs}/lib:${rosDistro.rosidl-typesupport-fastrtps-cpp}/lib:${rosDistro.rosidl-typesupport-fastrtps-c}/lib:${rosDistro.fastcdr}/lib:${rosDistro.fastrtps}/lib:''${DYLD_LIBRARY_PATH:-}"
       exec ${rosDistro.ros2cli}/bin/ros2 "$@"
     '';
   };
