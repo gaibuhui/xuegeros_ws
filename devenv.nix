@@ -15,6 +15,14 @@ let
             });
           })
         ];
+        # gnome-icon-theme does not create share/locale on Darwin, but its
+        # nixpkgs postInstall hook still removes it unconditionally.
+        gnome-icon-theme = prev.gnome-icon-theme.overrideAttrs (old: {
+          postInstall = if final.stdenv.hostPlatform.isDarwin then ''
+            rm -rf "$out/share/locale"
+          '' else old.postInstall;
+          meta = old.meta // { broken = false; };
+        });
       })
     ];
     config = {
@@ -22,9 +30,6 @@ let
       # rqt_image_view pulls in the data-only tango-icon-theme, which Nix
       # incorrectly restricts to Linux despite being usable on macOS.
       allowUnsupportedSystem = true;
-      # Its ROS 2 Humble GUI dependency chain also needs legacy icon themes
-      # that nixpkgs marks broken but which remain runtime data dependencies.
-      allowBroken = true;
     };
   };
 
