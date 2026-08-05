@@ -28,6 +28,51 @@ let
         pclWithQt5 = final.pcl;
         rosPackages = prev.rosPackages // {
           humble = prev.rosPackages.humble.overrideScope (rosFinal: rosPrev: {
+            ignoreDeprecatedRclcpp = package: package.overrideAttrs (old: {
+              NIX_CFLAGS_COMPILE = lib.replaceStrings
+                [ "-Wno-error=maybe-uninitialized" ] [ "" ]
+                (old.NIX_CFLAGS_COMPILE or "")
+                + " -Wno-error=deprecated-declarations -Wno-error=inconsistent-missing-override";
+            });
+            # The upstream nav2-bringup package propagates the navigation2
+            # meta-package, which pulls RViz into this headless workspace.
+            # Keep the same launch/configuration package name, but expose only
+            # the Nav2 servers and plugins used by xuegecar_navigation2.
+            nav2-bringup = rosPrev.buildRosPackage {
+              pname = "ros-humble-nav2-bringup";
+              version = "1.1.20-r1";
+              src = final.fetchurl {
+                url = "https://github.com/SteveMacenski/navigation2-release/archive/release/humble/nav2_bringup/1.1.20-1.tar.gz";
+                name = "1.1.20-1.tar.gz";
+                sha256 = "6a1ce6e390fd10f391b1e2644ae1c3fddd388fd7ae652670fd77e691e6b2500f";
+              };
+              buildType = "ament_cmake";
+              buildInputs = [ rosFinal.ament-cmake ];
+              # navigation2 is a meta-package that only pulls RViz into this
+              # headless build. nav2-bringup does not link against it.
+              postPatch = ''
+                substituteInPlace CMakeLists.txt \
+                  --replace-fail "find_package(navigation2 REQUIRED)" ""
+              '';
+              propagatedBuildInputs = [
+                rosFinal.launch-ros
+                rosFinal.nav2-amcl
+                rosFinal.nav2-behavior-tree
+                rosFinal.nav2-behaviors
+                rosFinal.nav2-bt-navigator
+                rosFinal.nav2-controller
+                rosFinal.nav2-costmap-2d
+                rosFinal.nav2-dwb-controller
+                rosFinal.nav2-lifecycle-manager
+                rosFinal.nav2-map-server
+                rosFinal.nav2-navfn-planner
+                rosFinal.nav2-planner
+                rosFinal.nav2-smoother
+                rosFinal.nav2-velocity-smoother
+                rosFinal.nav2-waypoint-follower
+              ];
+              nativeBuildInputs = [ rosFinal.ament-cmake ];
+            };
             # nix-ros-overlay omits the Apple Silicon SDK artifact even though
             # Foxglove publishes one for the SDK version used by Humble.
             foxglove-bridge = rosPrev.foxglove-bridge.overrideAttrs (_: let
@@ -59,19 +104,50 @@ else()
             # subscription callback.  Newer Humble rclcpp headers turn that
             # diagnostic into a build failure under Nav2's -Werror policy.
             nav2-util = rosPrev.nav2-util.overrideAttrs (old: {
+              NIX_CFLAGS_COMPILE = (old.NIX_CFLAGS_COMPILE or "")
+                + " -Wno-error=deprecated-declarations -Wno-error=inconsistent-missing-override";
               postPatch = (old.postPatch or "") + ''
                 substituteInPlace include/nav2_util/odometry_utils.hpp src/odometry_utils.cpp \
                   --replace-warn 'nav_msgs::msg::Odometry::SharedPtr msg' \
                   'nav_msgs::msg::Odometry::ConstSharedPtr msg'
               '';
             });
+            nav2-velocity-smoother = rosPrev.nav2-velocity-smoother.overrideAttrs (old: {
+              NIX_CFLAGS_COMPILE = (old.NIX_CFLAGS_COMPILE or "")
+                + " -Wno-error=deprecated-declarations -Wno-error=inconsistent-missing-override";
+              postPatch = (old.postPatch or "") + ''
+                substituteInPlace include/nav2_velocity_smoother/velocity_smoother.hpp src/velocity_smoother.cpp \
+                  --replace-warn 'geometry_msgs::msg::Twist::SharedPtr msg' \
+                  'geometry_msgs::msg::Twist::ConstSharedPtr msg'
+                substituteInPlace src/velocity_smoother.cpp \
+                  --replace-warn 'command_ = msg;' \
+                  'command_ = std::make_shared<geometry_msgs::msg::Twist>(*msg);'
+              '';
+            });
+            nav2-amcl = rosFinal.ignoreDeprecatedRclcpp rosPrev.nav2-amcl;
+            nav2-behavior-tree = rosFinal.ignoreDeprecatedRclcpp rosPrev.nav2-behavior-tree;
+            nav2-behaviors = rosFinal.ignoreDeprecatedRclcpp rosPrev.nav2-behaviors;
+            nav2-bt-navigator = rosFinal.ignoreDeprecatedRclcpp rosPrev.nav2-bt-navigator;
+            nav2-controller = rosFinal.ignoreDeprecatedRclcpp rosPrev.nav2-controller;
+            nav2-costmap-2d = rosFinal.ignoreDeprecatedRclcpp rosPrev.nav2-costmap-2d;
+            nav2-dwb-controller = rosFinal.ignoreDeprecatedRclcpp rosPrev.nav2-dwb-controller;
+            dwb-core = rosFinal.ignoreDeprecatedRclcpp rosPrev.dwb-core;
+            dwb-critics = rosFinal.ignoreDeprecatedRclcpp rosPrev.dwb-critics;
+            dwb-plugins = rosFinal.ignoreDeprecatedRclcpp rosPrev.dwb-plugins;
+            nav2-lifecycle-manager = rosFinal.ignoreDeprecatedRclcpp rosPrev.nav2-lifecycle-manager;
             nav2-map-server = rosPrev.nav2-map-server.overrideAttrs (old: {
+              NIX_CFLAGS_COMPILE = (old.NIX_CFLAGS_COMPILE or "")
+                + " -Wno-error=deprecated-declarations -Wno-error=inconsistent-missing-override";
               postPatch = (old.postPatch or "") + ''
                 substituteInPlace src/map_saver/map_saver.cpp \
                   --replace-fail 'nav_msgs::msg::OccupancyGrid::SharedPtr' \
                   'nav_msgs::msg::OccupancyGrid::ConstSharedPtr'
               '';
             });
+            nav2-navfn-planner = rosFinal.ignoreDeprecatedRclcpp rosPrev.nav2-navfn-planner;
+            nav2-planner = rosFinal.ignoreDeprecatedRclcpp rosPrev.nav2-planner;
+            nav2-smoother = rosFinal.ignoreDeprecatedRclcpp rosPrev.nav2-smoother;
+            nav2-waypoint-follower = rosFinal.ignoreDeprecatedRclcpp rosPrev.nav2-waypoint-follower;
           });
         };
       })
@@ -119,6 +195,8 @@ in
     rosDistro.demo-nodes-cpp
     rosDistro.demo-nodes-py
     rosDistro.teleop-twist-keyboard
+    # xuegecar_navigation2 includes Nav2's headless bringup launch file.
+    rosDistro.nav2-bringup
     rosDistro.nav2-map-server
     # xuegecar_cartographer launches cartographer_node and the occupancy-grid
     # node from this package; the core library is a direct build dependency.
@@ -161,15 +239,34 @@ in
       export COLCON_DEFAULTS_FILE="$DEVENV_ROOT/xuegeros_ws/colcon-defaults.yaml"
     fi
 
-    # Auto-source colcon workspace if built locally
+    # Auto-source a complete local colcon workspace. An interrupted build can
+    # leave package metadata behind without its local_setup.bash script.
     if [ -f install/setup.bash ]; then
-      source install/setup.bash
+      if find install -path '*/share/colcon-core/packages/*' -type f \
+        -exec sh -c '
+          for metadata in "$@"; do
+            prefix="''${metadata%/share/colcon-core/packages/*}"
+            [ -f "$prefix/local_setup.bash" ] || exit 1
+          done
+        ' sh {} +; then
+        source install/setup.bash
+      else
+        echo "Loading complete local packages; run colcon build to refresh incomplete ones."
+        for package_setup in install/*/share/*/package.bash; do
+          package_dir="''${package_setup%/package.bash}"
+          if [ -f "$package_setup" ] \
+            && { ! grep -q 'local_setup\.sh' "$package_setup" || [ -f "$package_dir/local_setup.sh" ]; } \
+            && { ! grep -q 'local_setup\.bash' "$package_setup" || [ -f "$package_dir/local_setup.bash" ]; }; then
+            source "$package_setup"
+          fi
+        done
+      fi
     fi
 
     # Python ROS packages are not always exposed through the overlay's ament
     # dependency closure. Keep their resources available after the local
     # workspace setup script has established the rest of the overlay paths.
-    export AMENT_PREFIX_PATH="${rosDistro.launch}:${rosDistro.launch-xml}:${rosDistro.rqt-gui}:${rosDistro.joint-state-publisher}:${rosDistro.teleop-twist-keyboard}:${rosDistro.tf2-tools}:${rosDistro.rmw-fastrtps-cpp}:$AMENT_PREFIX_PATH"
+    export AMENT_PREFIX_PATH="${rosDistro.launch}:${rosDistro.launch-xml}:${rosDistro.nav2-bringup}:${rosDistro.rqt-gui}:${rosDistro.joint-state-publisher}:${rosDistro.teleop-twist-keyboard}:${rosDistro.tf2-tools}:${rosDistro.rmw-fastrtps-cpp}:$AMENT_PREFIX_PATH"
   '';
 
   scripts.micro-ros-agent = {

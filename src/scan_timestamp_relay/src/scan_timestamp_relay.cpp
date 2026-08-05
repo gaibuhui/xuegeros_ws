@@ -17,7 +17,7 @@ public:
         publisher_->publish(corrected);
       });
     publisher_ = create_publisher<sensor_msgs::msg::LaserScan>(
-      "scan_synced", rclcpp::SensorDataQoS());
+      "/scan_synced", rclcpp::SensorDataQoS());
   }
 
 private:
