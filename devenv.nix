@@ -129,10 +129,6 @@ in
     echo "⚡ ROS 2 (Humble) + Nix Devenv activated on M3 Apple Silicon"
     export ROS_DOMAIN_ID=0
 
-    # ros-humble-rclpy references libyaml through @rpath on Darwin. Its
-    # libyaml-vendor package provides the library in the Nix store.
-    export DYLD_FALLBACK_LIBRARY_PATH="${rosDistro."libyaml-vendor"}/lib:''${DYLD_FALLBACK_LIBRARY_PATH:-}"
-
     # These hardware drivers use Linux-only kernel and pthread APIs.
     if [ "$(uname -s)" = "Darwin" ]; then
       export COLCON_DEFAULTS_FILE="$DEVENV_ROOT/xuegeros_ws/colcon-defaults.yaml"
@@ -155,6 +151,16 @@ in
       source "$DEVENV_ROOT/install/setup.bash"
       exec "$DEVENV_ROOT/install/micro_ros_agent/lib/micro_ros_agent/micro_ros_agent" \
         udp4 --port "''${MICRO_ROS_AGENT_PORT:-8888}" "$@"
+    '';
+  };
+
+  # devenv does not retain DYLD_* exports from enterShell when it executes a
+  # command. Launch ROS through a wrapper so its children inherit libyaml.
+  scripts.ros2 = {
+    description = "Run ROS 2 with Darwin runtime libraries available";
+    exec = ''
+      export DYLD_LIBRARY_PATH="${rosDistro."libyaml-vendor"}/lib:${rosDistro.robot-state-publisher}/lib:''${DYLD_LIBRARY_PATH:-}"
+      exec ${rosDistro.ros2cli}/bin/ros2 "$@"
     '';
   };
 }
