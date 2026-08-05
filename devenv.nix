@@ -17,7 +17,15 @@ let
         ];
       })
     ];
-    config.allowUnfree = true;
+    config = {
+      allowUnfree = true;
+      # rqt_image_view pulls in the data-only tango-icon-theme, which Nix
+      # incorrectly restricts to Linux despite being usable on macOS.
+      allowUnsupportedSystem = true;
+      # Its ROS 2 Humble GUI dependency chain also needs legacy icon themes
+      # that nixpkgs marks broken but which remain runtime data dependencies.
+      allowBroken = true;
+    };
   };
 
   # 2. Select your target ROS 2 distro (e.g., jazzy or humble)
@@ -32,6 +40,9 @@ in
     colcon
     cmake
     pkg-config
+    libyaml
+    python312Packages.numpy
+    python312Packages.opencv-python
 
     # ROS 2 Core Packages
     rosDistro.ros-core
@@ -39,8 +50,26 @@ in
     rosDistro.rclpy
     rosDistro.std-msgs
     rosDistro.geometry-msgs
+    rosDistro.nav-msgs
+    rosDistro.sensor-msgs
+    rosDistro.visualization-msgs
+    rosDistro.std-srvs
+    rosDistro.rmw
+    rosDistro.tf2
+    rosDistro.tf2-ros
+    rosDistro.tf2-geometry-msgs
     rosDistro.demo-nodes-cpp
     rosDistro.demo-nodes-py
+    rosDistro.rqt-image-view
+    qt5.full
+
+    # Native micro-ROS Agent build dependencies.
+    rosDistro.fastcdr
+    rosDistro.fastrtps
+    rosDistro.fastrtps-cmake-module
+    rosDistro.rmw-dds-common
+    rosDistro.rmw-fastrtps-shared-cpp
+    rosDistro.rosidl-typesupport-fastrtps-cpp
   ] ++ lib.optionals pkgs.stdenv.isDarwin [
     # Add native Apple frameworks if compiling custom C++ nodes
     apple-sdk_15
@@ -48,7 +77,12 @@ in
 
   enterShell = ''
     echo "⚡ ROS 2 (Humble) + Nix Devenv activated on M3 Apple Silicon"
-    export ROS_DOMAIN_ID=42
+    export ROS_DOMAIN_ID=0
+
+    # These hardware drivers use Linux-only kernel and pthread APIs.
+    if [ "$(uname -s)" = "Darwin" ]; then
+      export COLCON_DEFAULTS_FILE="$DEVENV_ROOT/xuegeros_ws/colcon-defaults.yaml"
+    fi
 
     # Auto-source colcon workspace if built locally
     if [ -f install/setup.zsh ]; then
@@ -57,4 +91,13 @@ in
       source install/setup.bash
     fi
   '';
+
+  scripts.micro-ros-agent = {
+    description = "Start the native micro-ROS Agent with UDP4 on port 8888";
+    exec = ''
+      source "$DEVENV_ROOT/src/install/setup.bash"
+      exec "$DEVENV_ROOT/src/install/micro_ros_agent/lib/micro_ros_agent/micro_ros_agent" \
+        udp4 --port "''${MICRO_ROS_AGENT_PORT:-8888}" "$@"
+    '';
+  };
 }
