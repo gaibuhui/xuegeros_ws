@@ -65,6 +65,9 @@ in
     rosDistro.tf2-geometry-msgs
     rosDistro.demo-nodes-cpp
     rosDistro.demo-nodes-py
+    # Required by xuegecar_bringup.launch.py to publish the robot link tree.
+    rosDistro.joint-state-publisher
+    rosDistro.robot-state-publisher
     # Camera nodes publish `sensor_msgs/CompressedImage`; this package
     # registers image_transport/compressed_{pub,sub} with pluginlib.
     rosDistro.compressed-image-transport
@@ -100,10 +103,10 @@ in
       source install/setup.bash
     fi
 
-    # nix-ros-overlay does not expose rqt_gui's ament resource through the
-    # rqt_image_view dependency closure.  Keep it available after the local
+    # Python ROS packages are not always exposed through the overlay's ament
+    # dependency closure. Keep their resources available after the local
     # workspace setup script has established the rest of the overlay paths.
-    export AMENT_PREFIX_PATH="${rosDistro.rqt-gui}:$AMENT_PREFIX_PATH"
+    export AMENT_PREFIX_PATH="${rosDistro.rqt-gui}:${rosDistro.joint-state-publisher}:$AMENT_PREFIX_PATH"
   '';
 
   scripts.micro-ros-agent = {
