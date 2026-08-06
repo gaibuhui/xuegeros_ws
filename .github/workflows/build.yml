@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 concurrency:
   group: build-${{ github.workflow }}-${{ github.ref }}
@@ -37,7 +38,7 @@ jobs:
         uses: cachix/install-nix-action@v31
 
       - name: Cache Nix store
-        uses: DeterminateSystems/magic-nix-cache-action@v9
+        uses: DeterminateSystems/flakehub-cache-action@v9
 
       - name: Install locked devenv CLI
         run: nix profile install github:NixOS/nixpkgs/ac62194c3917d5f474c1a844b6fd6da2db95077d#devenv
@@ -66,7 +67,9 @@ jobs:
 
       - name: Install Nix
         shell: bash
-        run: sh <(curl -L https://nixos.org/nix/install) --no-daemon
+        run: |
+          install -d -m 0755 /nix
+          sh <(curl -L https://nixos.org/nix/install) --no-daemon
 
       - name: Install locked devenv CLI
         shell: bash
