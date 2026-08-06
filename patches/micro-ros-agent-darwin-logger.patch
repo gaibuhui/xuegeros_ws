@@ -1,0 +1,16 @@
+diff --git a/micro_ros_agent/cmake/SuperBuild.cmake b/micro_ros_agent/cmake/SuperBuild.cmake
+index 46f4ed2..bd0c7e3 100644
+--- a/micro_ros_agent/cmake/SuperBuild.cmake
++++ b/micro_ros_agent/cmake/SuperBuild.cmake
+@@ -45,7 +45,10 @@ if(NOT xrceagent_FOUND)
+                 -DCMAKE_SYSTEM_NAME:STRING=${CMAKE_SYSTEM_NAME}
+                 -DUAGENT_USE_SYSTEM_FASTDDS:BOOL=ON
+                 -DUAGENT_USE_SYSTEM_FASTCDR:BOOL=ON
+-                -DUAGENT_USE_SYSTEM_LOGGER:BOOL=${UAGENT_USE_SYSTEM_LOGGER}
++                # ROS Humble's Darwin Fast DDS exports an older fmt through
++                # its public target. Disable the optional logger to avoid
++                # mixing it with Micro XRCE-DDS Agent's bundled spdlog.
++                -DUAGENT_LOGGER_PROFILE:BOOL=OFF
+                 -DUAGENT_CED_PROFILE:BOOL=OFF
+                 -DUAGENT_P2P_PROFILE:BOOL=OFF
+                 -DUAGENT_BUILD_EXECUTABLE:BOOL=OFF
