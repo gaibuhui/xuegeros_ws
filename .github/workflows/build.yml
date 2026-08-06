@@ -48,3 +48,34 @@ jobs:
 
       - name: Build workspace
         run: devenv shell -- colcon build --event-handlers console_direct+
+
+  archlinux:
+    name: Arch Linux x86_64
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:base
+
+    steps:
+      - name: Install Arch build prerequisites
+        run: pacman -Syu --noconfirm curl git xz
+
+      - name: Check out source and submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Nix
+        shell: bash
+        run: sh <(curl -L https://nixos.org/nix/install) --no-daemon
+
+      - name: Install locked devenv CLI
+        shell: bash
+        run: |
+          source /root/.nix-profile/etc/profile.d/nix.sh
+          nix profile install github:NixOS/nixpkgs/ac62194c3917d5f474c1a844b6fd6da2db95077d#devenv
+
+      - name: Build workspace
+        shell: bash
+        run: |
+          source /root/.nix-profile/etc/profile.d/nix.sh
+          devenv shell -- colcon build --event-handlers console_direct+
