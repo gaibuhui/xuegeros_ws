@@ -1,5 +1,7 @@
 import os
 from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
+from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
@@ -12,6 +14,7 @@ def generate_launch_description():
     # =====================运行节点需要的配置=======================================================================
     # 是否使用仿真时间，我们用gazebo，这里设置成true
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
+    start_rviz = LaunchConfiguration('start_rviz', default='false')
     # 地图的分辨率
     resolution = LaunchConfiguration('resolution', default='0.05')
     # 地图的发布周期
@@ -29,7 +32,8 @@ def generate_launch_description():
         output='screen',
         parameters=[{'use_sim_time': use_sim_time}],
         arguments=['-configuration_directory', configuration_directory,
-                   '-configuration_basename', configuration_basename])
+                   '-configuration_basename', configuration_basename],
+        remappings=[('scan', '/scan_synced')])
 
     cartographer_occupancy_grid_node = Node(
         package='cartographer_ros',
@@ -45,10 +49,14 @@ def generate_launch_description():
         name='rviz2',
         # arguments=['-d', rviz_config_dir],
         parameters=[{'use_sim_time': use_sim_time}],
+        condition=IfCondition(start_rviz),
         output='screen')
 
     # ===============================================定义启动文件========================================================
     ld = LaunchDescription()
+    ld.add_action(DeclareLaunchArgument(
+        'start_rviz', default_value='false',
+        description='Start RViz alongside Cartographer.'))
     ld.add_action(cartographer_node)
     ld.add_action(cartographer_occupancy_grid_node)
     ld.add_action(rviz_node)

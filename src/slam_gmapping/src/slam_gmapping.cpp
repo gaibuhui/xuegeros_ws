@@ -526,7 +526,7 @@ void SlamGmapping::publishTransform()
         tfB_->sendTransform(transform);
     }
     catch (tf2::LookupException& te){
-        RCLCPP_INFO(this->get_logger(), te.what());
+        RCLCPP_INFO(this->get_logger(), "%s", te.what());
     }
     map_to_odom_mutex_.unlock();
 }

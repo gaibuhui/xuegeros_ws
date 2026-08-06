@@ -4,6 +4,7 @@
 #include <sensor_msgs/msg/laser_scan.hpp>
 
 #include <algorithm>
+#include <cinttypes>
 #include <cmath>
 #include <limits>
 #include <memory>
@@ -131,8 +132,9 @@ private:
     const auto stats = lidar_->getStats();
     RCLCPP_INFO(
       get_logger(),
-      "Camsense stats: bytes=%lu packets=%lu bad_headers=%lu valid_points=%lu "
-      "invalid_points=%lu completed_scans=%lu published_scans=%lu buffered_points=%zu",
+      "Camsense stats: bytes=%" PRIu64 " packets=%" PRIu64 " bad_headers=%" PRIu64
+      " valid_points=%" PRIu64 " invalid_points=%" PRIu64 " completed_scans=%" PRIu64
+      " published_scans=%" PRIu64 " buffered_points=%zu",
       stats.bytes_read, stats.packets, stats.invalid_headers, stats.valid_points,
       stats.invalid_points, stats.completed_scans, published_scans_, stats.current_scan_points);
   }

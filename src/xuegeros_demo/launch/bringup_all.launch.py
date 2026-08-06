@@ -6,7 +6,7 @@ from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
-    sudo_password = "xuegeros"
+    sudo_password = os.environ.get('XUEGEROS_SUDO_PASSWORD', '')
     
     # 1. Socat 进程 (立即启动)
     socat_cmd = f'echo "{sudo_password}" | sudo -S socat -d -d PTY,link=/dev/lidar,raw,echo=0,mode=666 UDP4-LISTEN:8889,reuseaddr,fork'

@@ -1,0 +1,4 @@
+build:
+  packages-skip:
+    - ldlidar_stl_ros2
+    - ydlidar_ros2_driver

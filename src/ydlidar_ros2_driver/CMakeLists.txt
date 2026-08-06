@@ -23,6 +23,11 @@ find_package(std_srvs REQUIRED)
 ############## YDLIDAR SDK START#####################################
 #find ydlidar_sdk package
 find_package(ydlidar_sdk REQUIRED)
+
+# The vendor SDK's CMake config omits YDLIDAR_SDK_LIBRARY_DIRS. Derive its
+# installed lib directory from the package config so macOS can link and load
+# the workspace-local SDK.
+get_filename_component(YDLIDAR_SDK_LIBRARY_DIR "${ydlidar_sdk_DIR}/../.." ABSOLUTE)
 ############## YDLIDAR SDK END#####################################
 
 #Include directories
@@ -32,7 +37,7 @@ include_directories(
   ${YDLIDAR_SDK_INCLUDE_DIRS})
 
 #link library directories
-link_directories(${YDLIDAR_SDK_LIBRARY_DIRS})
+link_directories(${YDLIDAR_SDK_LIBRARY_DIRS} ${YDLIDAR_SDK_LIBRARY_DIR})
 
 #---------------------------------------------------------------------------------------
 # generate excutable and add libraries
@@ -52,6 +57,10 @@ ament_target_dependencies(${PROJECT_NAME}_node
 
 target_link_libraries(${PROJECT_NAME}_node
     ${YDLIDAR_SDK_LIBRARIES})
+
+set_target_properties(${PROJECT_NAME}_node PROPERTIES
+    BUILD_RPATH "${YDLIDAR_SDK_LIBRARY_DIR}"
+    INSTALL_RPATH "${YDLIDAR_SDK_LIBRARY_DIR}")
 
 #---------------------------------------------------------------------------------------
 # generate excutable and add libraries
@@ -85,4 +94,3 @@ if(BUILD_TESTING)
 endif()
 
 ament_package()
-

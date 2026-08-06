@@ -236,7 +236,7 @@ in
 
     # These hardware drivers use Linux-only kernel and pthread APIs.
     if [ "$(uname -s)" = "Darwin" ]; then
-      export COLCON_DEFAULTS_FILE="$DEVENV_ROOT/xuegeros_ws/colcon-defaults.yaml"
+      export COLCON_DEFAULTS_FILE="$DEVENV_ROOT/colcon-defaults.yaml"
     fi
 
     # Auto-source a complete local colcon workspace. An interrupted build can
