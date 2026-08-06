@@ -3,7 +3,9 @@
 let
   # 1. Overlay nix-ros-overlay onto nixpkgs
   pkgsWithRos = import inputs.nixpkgs {
-    system = "aarch64-darwin"; # Explicitly set for M-series Apple Silicon
+    # Evaluate the ROS environment for the active host, including GitHub's
+    # Ubuntu and Apple Silicon runners.
+    system = pkgs.stdenv.hostPlatform.system;
     overlays = [
       inputs.nix-ros-overlay.overlays.default
       (final: prev: {
@@ -231,7 +233,7 @@ in
   ];
 
   enterShell = ''
-    echo "⚡ ROS 2 (Humble) + Nix Devenv activated on M3 Apple Silicon"
+    echo "ROS 2 (Humble) + Nix Devenv activated on $(uname -sm)"
     export ROS_DOMAIN_ID=0
 
     # These hardware drivers use Linux-only kernel and pthread APIs.

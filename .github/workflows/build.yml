@@ -1,0 +1,50 @@
+name: Build ROS 2 Workspace
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Ubuntu x86_64
+            os: ubuntu-latest
+            apply_darwin_patch: false
+          - name: macOS ARM64
+            os: macos-14
+            apply_darwin_patch: true
+
+    steps:
+      - name: Check out source and submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+
+      - name: Cache Nix store
+        uses: DeterminateSystems/magic-nix-cache-action@v9
+
+      - name: Install locked devenv CLI
+        run: nix profile install github:NixOS/nixpkgs/ac62194c3917d5f474c1a844b6fd6da2db95077d#devenv
+
+      - name: Apply macOS micro-ROS patch
+        if: matrix.apply_darwin_patch
+        run: ./scripts/apply-micro-ros-agent-patch.sh
+
+      - name: Build workspace
+        run: devenv shell -- colcon build --event-handlers console_direct+
