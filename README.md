@@ -1,5 +1,7 @@
 ## Setup
 
+Install [devenv](https://devenv.sh/getting-started/) before building the workspace.
+
 Clone the micro-ROS dependencies, then apply the macOS Fast DDS compatibility
 patch before building the workspace:
 
