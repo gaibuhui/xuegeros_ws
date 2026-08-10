@@ -290,4 +290,15 @@ in
       exec ${rosDistro.ros2cli}/bin/ros2 "$@"
     '';
   };
+
+  # `devenv up` runs the hardware-facing foundation only. Mapping, navigation,
+  # and obstacle avoidance are intentionally separate because they conflict on
+  # algorithm selection and /cmd_vel ownership.
+  processes = {
+    micro-ros-agent.exec = "micro-ros-agent";
+    camera.exec = "ros2 launch xuegecar_camera http_video_publisher.launch.py";
+    bringup.exec = "ros2 launch xuegecar_bringup xuegecar_bringup.launch.py";
+    scan-timestamp-relay.exec = "ros2 launch scan_timestamp_relay scan_timestamp_relay.launch.py";
+    foxglove.exec = "ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765";
+  };
 }
