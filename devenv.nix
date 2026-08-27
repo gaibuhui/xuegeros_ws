@@ -299,6 +299,6 @@ in
     camera.exec = "ros2 launch xuegecar_camera http_video_publisher.launch.py";
     bringup.exec = "ros2 launch xuegecar_bringup xuegecar_bringup.launch.py";
     scan-timestamp-relay.exec = "ros2 launch scan_timestamp_relay scan_timestamp_relay.launch.py";
-    foxglove.exec = "ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765";
+    # foxglove.exec = "ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765";
   };
 }

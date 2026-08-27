@@ -38,7 +38,7 @@ jobs:
         uses: cachix/install-nix-action@v31
 
       - name: Cache Nix store
-        uses: DeterminateSystems/flakehub-cache-action@v9
+        uses: DeterminateSystems/flakehub-cache-action@v3.21.9
 
       - name: Install locked devenv CLI
         run: nix profile install github:NixOS/nixpkgs/ac62194c3917d5f474c1a844b6fd6da2db95077d#devenv
@@ -69,6 +69,11 @@ jobs:
         shell: bash
         run: |
           install -d -m 0755 /nix
+          groupadd --system nixbld
+          for uid in $(seq 1 32); do
+            useradd --system --no-create-home --gid nixbld --groups nixbld \
+              --shell /usr/bin/nologin "nixbld${uid}"
+          done
           sh <(curl -L https://nixos.org/nix/install) --no-daemon
 
       - name: Install locked devenv CLI
